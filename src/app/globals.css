@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "katex/dist/katex.min.css";
+
+:root {
+  --background: #f8f5ee;
+  --foreground: #171717;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(120, 113, 108, 0.10), transparent 32rem),
+    linear-gradient(180deg, #fffaf0 0%, var(--background) 48%, #f3efe6 100%);
+  color: var(--foreground);
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}
