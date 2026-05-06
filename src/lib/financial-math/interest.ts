@@ -1,7 +1,5 @@
 export type InterestModel = "simple" | "compound";
 
-export type GraphMode = "factor" | "amount" | "interest";
-
 export type AccumulationGraphPoint = {
   time: number;
   simpleFactor: number;
@@ -96,22 +94,4 @@ export function generateAccumulationGraphData(
   }
 
   return points;
-}
-
-export function getSimpleDataKey(graphMode: GraphMode): keyof AccumulationGraphPoint {
-  if (graphMode === "factor") return "simpleFactor";
-  if (graphMode === "amount") return "simpleAmount";
-  return "simpleInterest";
-}
-
-export function getCompoundDataKey(graphMode: GraphMode): keyof AccumulationGraphPoint {
-  if (graphMode === "factor") return "compoundFactor";
-  if (graphMode === "amount") return "compoundAmount";
-  return "compoundInterest";
-}
-
-export function getYAxisLabel(graphMode: GraphMode): string {
-  if (graphMode === "factor") return "Accumulation factor a(t)";
-  if (graphMode === "amount") return "Amount function A(t)";
-  return "Interest earned I(t)";
 }
