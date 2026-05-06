@@ -1,0 +1,21 @@
+# Measurement of Interest
+
+The accumulation function \(a(t)\) tells us how much 1 monetary unit invested at time 0 grows to by time \(t\).
+
+The amount function is:
+
+\[
+A(t)=P a(t)
+\]
+
+Use the interactive visualizer to compare simple and compound interest.
+
+```tsx
+<AccumulationFunctionVisualizer
+  principal={1000}
+  rate={0.05}
+  timeHorizon={10}
+  selectedTime={10}
+  model="both"
+/>
+```
