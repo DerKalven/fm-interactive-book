@@ -15,14 +15,9 @@ import { InlineMath } from "react-katex";
 import {
   compareSimpleAndCompound,
   generateAccumulationGraphData,
-  getCompoundDataKey,
-  getSimpleDataKey,
-  getYAxisLabel,
-  type GraphMode,
 } from "@/lib/financial-math/interest";
 import {
   formatCurrency,
-  formatDecimal,
   formatPercent,
 } from "@/lib/financial-math/formatters";
 
@@ -35,32 +30,6 @@ export type AccumulationFunctionVisualizerProps = {
   selectedTime?: number;
   model?: DisplayModel;
 };
-
-const graphModeCopy: Record<GraphMode, string> = {
-  factor:
-    "This graph shows a(t), the growth of 1 monetary unit invested at time 0. Changing the principal does not change this graph.",
-  amount:
-    "This graph shows A(t), the accumulated value of the principal entered by the user. This is the graph most directly connected to future value.",
-  interest:
-    "This graph shows I(t), the interest earned over time. It excludes the original principal and shows only the growth portion.",
-};
-
-function formatGraphValue(value: number, graphMode: GraphMode) {
-  if (graphMode === "factor") return formatDecimal(value);
-  return formatCurrency(value);
-}
-
-function getSimpleLabel(graphMode: GraphMode) {
-  if (graphMode === "factor") return "Simple a(t)";
-  if (graphMode === "amount") return "Simple A(t)";
-  return "Simple I(t)";
-}
-
-function getCompoundLabel(graphMode: GraphMode) {
-  if (graphMode === "factor") return "Compound a(t)";
-  if (graphMode === "amount") return "Compound A(t)";
-  return "Compound I(t)";
-}
 
 export default function AccumulationFunctionVisualizer({
   principal: initialPrincipal = 1000,
@@ -76,7 +45,6 @@ export default function AccumulationFunctionVisualizer({
     Math.min(initialSelectedTime, initialTimeHorizon)
   );
   const [model, setModel] = useState<DisplayModel>(initialModel);
-  const [graphMode, setGraphMode] = useState<GraphMode>("amount");
 
   const rate = ratePercent / 100;
 
@@ -89,10 +57,6 @@ export default function AccumulationFunctionVisualizer({
     () => compareSimpleAndCompound(principal, rate, selectedTime),
     [principal, rate, selectedTime]
   );
-
-  const simpleDataKey = getSimpleDataKey(graphMode);
-  const compoundDataKey = getCompoundDataKey(graphMode);
-  const yAxisLabel = getYAxisLabel(graphMode);
 
   const showSimple = model === "simple" || model === "both";
   const showCompound = model === "compound" || model === "both";
@@ -110,14 +74,15 @@ export default function AccumulationFunctionVisualizer({
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
           SOA Exam FM · Interest Theory
         </p>
+
         <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-          Accumulation Function Visualizer
+          Amount Function Visualizer
         </h2>
+
         <p className="mt-3 max-w-3xl text-slate-600">
-          Explore how money accumulates over time. Compare simple interest,
-          compound interest, the accumulation factor <InlineMath math="a(t)" />,
-          the amount function <InlineMath math="A(t)" />, and interest earned{" "}
-          <InlineMath math="I(t)" />.
+          This graph shows the accumulated value{" "}
+          <InlineMath math="A(t)=P\\cdot a(t)" /> based on the principal,
+          interest rate, and time selected by the user.
         </p>
       </div>
 
@@ -231,73 +196,56 @@ export default function AccumulationFunctionVisualizer({
                 )}
               </div>
             </div>
-
-            <div>
-              <p className="text-sm font-medium text-slate-700">
-                Graph displays
-              </p>
-              <div className="mt-3 grid gap-2">
-                {[
-                  ["factor", "Accumulation factor a(t)"],
-                  ["amount", "Amount function A(t)"],
-                  ["interest", "Interest earned I(t)"],
-                ].map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setGraphMode(value as GraphMode)}
-                    className={`rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${
-                      graphMode === value
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
 
         <div className="space-y-6">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <ValueTile
-              title="Simple amount"
-              value={formatCurrency(selectedValues.simpleAmount)}
-              subtitle={`A(${selectedTime}) = P(1 + it)`}
-              visible={showSimple}
-            />
-            <ValueTile
-              title="Compound amount"
-              value={formatCurrency(selectedValues.compoundAmount)}
-              subtitle={`A(${selectedTime}) = P(1 + i)^t`}
-              visible={showCompound}
-            />
-            <ValueTile
-              title="Simple interest"
-              value={formatCurrency(selectedValues.simpleInterest)}
-              subtitle={`I(${selectedTime}) = A(t) - P`}
-              visible={showSimple}
-            />
-            <ValueTile
-              title="Compound advantage"
-              value={formatCurrency(selectedValues.difference)}
-              subtitle="Compound amount minus simple amount"
-              visible={model === "both"}
-            />
+            {showSimple && (
+              <ValueTile
+                title="Simple amount"
+                value={formatCurrency(selectedValues.simpleAmount)}
+                subtitle={`A(${selectedTime}) = P(1 + it)`}
+              />
+            )}
+
+            {showCompound && (
+              <ValueTile
+                title="Compound amount"
+                value={formatCurrency(selectedValues.compoundAmount)}
+                subtitle={`A(${selectedTime}) = P(1 + i)^t`}
+              />
+            )}
+
+            {showSimple && (
+              <ValueTile
+                title="Simple interest"
+                value={formatCurrency(selectedValues.simpleInterest)}
+                subtitle={`I(${selectedTime}) = A(t) - P`}
+              />
+            )}
+
+            {model === "both" && (
+              <ValueTile
+                title="Compound advantage"
+                value={formatCurrency(selectedValues.difference)}
+                subtitle="Compound amount minus simple amount"
+              />
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">
-                  {yAxisLabel}
+                  Amount Function A(t)
                 </h3>
                 <p className="mt-1 max-w-3xl text-sm text-slate-600">
-                  {graphModeCopy[graphMode]}
+                  The y-axis now shows the accumulated value generated by the
+                  user inputs. If you change the principal, the graph changes.
                 </p>
               </div>
+
               <div className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">
                 i = {formatPercent(rate)}
               </div>
@@ -307,9 +255,10 @@ export default function AccumulationFunctionVisualizer({
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={graphData}
-                  margin={{ top: 20, right: 28, left: 22, bottom: 18 }}
+                  margin={{ top: 20, right: 28, left: 32, bottom: 18 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
+
                   <XAxis
                     dataKey="time"
                     label={{
@@ -318,30 +267,29 @@ export default function AccumulationFunctionVisualizer({
                       offset: -10,
                     }}
                   />
+
                   <YAxis
-                    width={90}
-                    tickFormatter={(value) =>
-                      graphMode === "factor"
-                        ? formatDecimal(Number(value))
-                        : formatCurrency(Number(value))
-                    }
+                    width={100}
+                    tickFormatter={(value) => formatCurrency(Number(value))}
                   />
+
                   <Tooltip
                     formatter={(value, name) => [
                       typeof value === "number"
-                        ? formatGraphValue(value, graphMode)
+                        ? formatCurrency(value)
                         : String(value),
                       String(name),
                     ]}
                     labelFormatter={(label) => `t = ${label} years`}
                   />
+
                   <Legend verticalAlign="top" height={36} />
 
                   {showSimple && (
                     <Line
                       type="monotone"
-                      dataKey={simpleDataKey}
-                      name={getSimpleLabel(graphMode)}
+                      dataKey="simpleAmount"
+                      name="Simple A(t)"
                       stroke="#2563eb"
                       strokeWidth={3}
                       dot={false}
@@ -352,8 +300,8 @@ export default function AccumulationFunctionVisualizer({
                   {showCompound && (
                     <Line
                       type="monotone"
-                      dataKey={compoundDataKey}
-                      name={getCompoundLabel(graphMode)}
+                      dataKey="compoundAmount"
+                      name="Compound A(t)"
                       stroke="#dc2626"
                       strokeWidth={3}
                       dot={false}
@@ -370,6 +318,7 @@ export default function AccumulationFunctionVisualizer({
               <h3 className="text-lg font-semibold text-slate-900">
                 Formula panel
               </h3>
+
               <div className="mt-4 space-y-4 text-slate-700">
                 {showSimple && (
                   <div className="rounded-xl bg-white p-4">
@@ -377,7 +326,7 @@ export default function AccumulationFunctionVisualizer({
                       Simple interest
                     </p>
                     <p className="mt-2">
-                      <InlineMath math="a(t)=1+it" />
+                      <InlineMath math="A(t)=P(1+it)" />
                     </p>
                     <p className="mt-2">
                       <InlineMath
@@ -402,7 +351,7 @@ export default function AccumulationFunctionVisualizer({
                       Compound interest
                     </p>
                     <p className="mt-2">
-                      <InlineMath math="a(t)=(1+i)^t" />
+                      <InlineMath math="A(t)=P(1+i)^t" />
                     </p>
                     <p className="mt-2">
                       <InlineMath
@@ -427,6 +376,7 @@ export default function AccumulationFunctionVisualizer({
               <h3 className="text-lg font-semibold text-slate-900">
                 Principal and interest decomposition
               </h3>
+
               <p className="mt-2 text-sm text-slate-600">
                 Accumulated value is principal plus interest earned.
               </p>
@@ -439,6 +389,7 @@ export default function AccumulationFunctionVisualizer({
                     interest={selectedValues.simpleInterest}
                   />
                 )}
+
                 {showCompound && (
                   <DecompositionRow
                     label="Compound"
@@ -455,11 +406,10 @@ export default function AccumulationFunctionVisualizer({
               Concept checkpoint
             </h3>
             <p className="mt-2 text-slate-600">
-              Change the principal while the graph mode is set to{" "}
-              <strong>Accumulation factor a(t)</strong>. The graph does not
-              change because <InlineMath math="a(t)" /> tracks the growth of 1
-              unit. Now switch to <strong>Amount function A(t)</strong>. The
-              graph changes because <InlineMath math="A(t)=P\\cdot a(t)" />.
+              This graph shows <InlineMath math="A(t)" />, not only{" "}
+              <InlineMath math="a(t)" />. Therefore, when you change{" "}
+              <InlineMath math="P" />, the entire graph changes because{" "}
+              <InlineMath math="A(t)=P\\cdot a(t)" />.
             </p>
           </div>
         </div>
@@ -472,15 +422,11 @@ function ValueTile({
   title,
   value,
   subtitle,
-  visible,
 }: {
   title: string;
   value: string;
   subtitle: string;
-  visible: boolean;
 }) {
-  if (!visible) return null;
-
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <p className="text-sm font-medium text-slate-500">{title}</p>
@@ -509,6 +455,7 @@ function DecompositionRow({
         <span className="font-semibold text-slate-700">{label}</span>
         <span className="text-slate-500">{formatCurrency(total)}</span>
       </div>
+
       <div className="flex h-8 overflow-hidden rounded-full border border-slate-200 bg-white">
         <div
           className="flex items-center justify-center bg-slate-300 text-xs font-semibold text-slate-800"
@@ -516,6 +463,7 @@ function DecompositionRow({
         >
           P
         </div>
+
         <div
           className="flex items-center justify-center bg-slate-900 text-xs font-semibold text-white"
           style={{ width: `${interestPercent}%` }}
@@ -523,6 +471,7 @@ function DecompositionRow({
           I
         </div>
       </div>
+
       <div className="mt-2 flex justify-between text-xs text-slate-500">
         <span>Principal: {formatCurrency(principal)}</span>
         <span>Interest: {formatCurrency(interest)}</span>
