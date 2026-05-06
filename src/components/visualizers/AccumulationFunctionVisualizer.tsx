@@ -203,7 +203,7 @@ export function AccumulationFunctionVisualizer({
                   <XAxis dataKey="time" label={{ value: "Time in years", position: "insideBottom", offset: -6 }} />
                   <YAxis label={{ value: "a(t)", angle: -90, position: "insideLeft" }} />
                   <Tooltip
-                    formatter={(value: number, name: string) => [formatDecimal(value), name]}
+                    formatter={(value, name) => [typeof value === "number" ? formatDecimal(value) : String(value), String(name)]}
                     labelFormatter={(label) => `t = ${label} years`}
                   />
                   <Legend verticalAlign="top" />
